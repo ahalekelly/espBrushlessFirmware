@@ -2,7 +2,7 @@
 #include <ESP8266mDNS.h>
 #include <WiFiUdp.h>
 #include <ArduinoOTA.h>
-#include "RemoteDebug.h" // Remote debug over telnet - not recommended for production, only for development			 
+#include "RemoteDebug.h"
 
 const char* ssid = "Hummingbird";
 const char* password = "4157315648";
@@ -14,11 +14,10 @@ const char* password = "4157315648";
 #define MOTOR_FB_PIN_A 14
 #define MOTOR_FB_PIN_B 16
 
-#define DEBOUNCE_MS 100
 #define ESC_FREQ 400
 #define PWM_MAX 65535
 
-//uint16_t pulseLenOff = 105;
+//uint16_t pulseLenOff = 105; // oneshot125
 //uint16_t pulseLenOn = 260;
 uint16_t pulseLenOff = 900;
 uint16_t pulseLenIdle = 1100;
@@ -35,7 +34,7 @@ volatile uint32_t timeThisPulseB = micros();
 uint32_t escOutVal = 0;
 uint32_t onTime = 100;
 uint32_t idleTime = 30000;
-bool switchPressed = false; // true = pressed
+bool switchPressed = false;
 uint16_t motorState = 0; // 3=switch down motor on, 2=switch up still on, 1=idling, 0=off
 uint32_t switchLastPressed = 0;
 
@@ -99,7 +98,7 @@ void setup() {
 		else if (error == OTA_END_ERROR) Serial.println("End Failed");
 	});
 	ArduinoOTA.begin();
-	Debug.begin("Telnet_HostName"); // Initiaze the telnet server - this name is used in MDNS.begin
+	Debug.begin("esp8266_telnet");
 	digitalWrite(LED_PIN, LOW);
 }
 
@@ -114,7 +113,7 @@ void loop() {
 	} else switch (motorState) {
 		case 3:
 			switchLastPressed = millis();
-			motorState = 2;
+			motorState = 2; // leave motor on for a bit after switch is released
 			break;
 		case 2:
 			if (millis() - switchLastPressed > onTime) {
