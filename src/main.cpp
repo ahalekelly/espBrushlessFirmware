@@ -36,7 +36,7 @@ uint32_t escOutVal = 0;
 uint32_t onTime = 100;
 uint32_t idleTime = 30000;
 bool switchPressed = false; // true = pressed
-uint16_t motorState = 0; // 3=switch down, 2=switch up, still on, 1=idling, 0=off
+uint16_t motorState = 0; // 3=switch down motor on, 2=switch up still on, 1=idling, 0=off
 uint32_t switchLastPressed = 0;
 
 RemoteDebug Debug;
@@ -108,7 +108,9 @@ void loop() {
 	Debug.handle();
 	switchPressed = !digitalRead(SWITCH_PIN);
 	if (switchPressed == true) {
+		escOut(pulseLenOn);
 		motorState = 3;
+		digitalWrite(LED_PIN, HIGH);
 	} else switch (motorState) {
 		case 3:
 			switchLastPressed = millis();
@@ -118,13 +120,14 @@ void loop() {
 			if (millis() - switchLastPressed > onTime) {
 				escOut(pulseLenIdle);
 				motorState = 1; // start idling
-				digitalWrite(LED_PIN, HIGH);
 			}
+			break;
 		case 1:
 			if (millis() - switchLastPressed > idleTime) {
 				escOut(pulseLenOff);
 				motorState = 0; // stop idling
 				digitalWrite(LED_PIN, LOW);
 			}
+			break;
 	}
 }
